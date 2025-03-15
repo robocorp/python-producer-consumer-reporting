@@ -1,8 +1,8 @@
-# Template: Python - Producer-Consumer
+# Template: Python - Producer-Consumer-Reporter
 
 This template leverages the new [Python framework](https://github.com/robocorp/robocorp), the [libraries](https://github.com/robocorp/robocorp/blob/master/docs/README.md#python-libraries) from to same project as well.
 
-This template contains a working robot implementation that has the basic structure where the first part produces work items from an input and the second one consumes those newly created output work items.
+This template contains a working robot implementation that has the basic structure where the first part produces work items from an input, the second one consumes those newly created output work items and the reports results of the second step.
 
 ![process.png](./docs/process.png)
 
@@ -12,77 +12,78 @@ The template tries to keep the amount of functional code at a minimum so you hav
 
 ## Tasks
 
-The robot is split into two tasks, meant to run as separate steps in Control Room. The first task generates (produces) data, and the second one reads (consumes) and processes that data.
+The robot is split into three tasks, meant to run as separate steps in Control Room. The first task generates (produces) data, the second one reads (consumes) and processes that data, and the third one creates a report of the results.
 
 ### The first task (the producer)
 
 - Load the example Excel file from work item
-- Split the Excel file into work items for the consumer
+- Split the Excel file into work items for the consumer, where each work item contains:
+  - Name
+  - Zip code
+  - Product information
 
 ### The second task (the consumer)
 
 > We recommended checking out the article "[Work item exception handling](https://robocorp.com/docs-robot-framework/development-guide/control-room/work-items#work-item-exception-handling)" before diving in.
 
 - Loop through all work items in the queue and access the payloads from the previous step
+- Validate the ZIP code (must be between 1000-9999)
+- Process each order with the provided information
+- Handle potential errors:
+  - Invalid ZIP codes (BUSINESS error)
+  - Missing fields (APPLICATION error)
+
+### The third task (the reporter)
+
+- Collects and analyzes the results from the consumer step
+- Uses the Robocorp Process API to fetch detailed information about the consumer step's work items
+- Generates a report showing:
+  - Success/failure status for each order
+  - Order details (Name, ZIP code, Product)
+  - Any exceptions that occurred during processing
+
+### Step configuration in the Control Room for last step (the reporter)
+
+This example is based on the reporter step configuration that will trigger last step only after
+all consumer step executions have completed and resulted in either done or fail.
+
+![reporter_step_configuration.png](./docs/reporter_step_configuration.png)
 
 ## Local testing
 
 For best experience to test the work items in this example we recommend using [Sema4.ai SDK extension for VS Code](https://robocorp.com/docs/visual-studio-code/extension-features). With the Sema4 extension you can simply run and [select the input work items](https://robocorp.com/docs/visual-studio-code/extension-features#using-work-items) to use, create inputs to simulate error cases, and so on.
 
+There are two example input Excel files in [./devdata/work-items-in/test-input-for-producer](./devdata/work-items-in/test-input-for-producer) folder
+
+1. [orders.xlsx](./devdata/work-items-in/test-input-for-producer/orders.xlsx) containing 9 valid orders
+2. [orders_fails.xlsx](./devdata/work-items-in/test-input-for-producer/orders_fails.xlsx) containing 7 valid orders and 2 faulty orders
+
 ## Extending the template
 
 > The [producer-consumer](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem) model is not limited to two steps, it can continue so that the consumer generates further work items for the next step and so on.
 
-Here's how you can add a third step, let's say a **reporter**, which will collect inputs from the previous one (the **consumer**) and generate a simple report with the previously created data. But first, see below what you need to add extra:
+This template already includes a reporter step that demonstrates how to extend the basic producer-consumer pattern. The reporter shows how to:
 
-### The `reporter` step code
+1. Access the Robocorp Process API to get detailed information about previous steps
+2. Collect and analyze results from multiple work items
+3. Generate meaningful reports about the process execution
 
-```python
-@task
-def reporter():
-    """Collect and combine all the consumer outputs into a single report."""
-    complete_orders = sum("complete" in item.payload["Order"] for item in workitems.inputs)
-    print(f"Complete orders: {complete_orders}")
-```
+You can further extend this pattern by:
 
-And as you can see, we collect some `"Order"` info from the previously created outputs, but we don't have yet such outputs created in the previous step (the **consumer**), so let's create them:
+- Adding more validation steps
+- Implementing different types of reporting
+- Adding more sophisticated error handling
+- Creating additional processing steps
 
-```python
-@task
-def consumer():
-    """Process all the produced input Work Items from the previous step."""
-    for item in workitems.inputs:
-        try:
-            ...
-            workitems.outputs.create(payload={"Order": f"{name} is complete"})
-            item.done()
-        except AssertionError as err:
-            ...
-```
-
-The magic happens in this single line added right before the `item.done()` part: `workitems.outputs.create(payload={"Order": f"{name} is complete"})`. This creates a new output for every processed input with an `"Order"` field in the payload data. This is retrieved in the next step (**reporter**) through `item.payload["Order"]`.
-
-### The `reporter` task entry
-
-All good on the code side, but we need now to make this new task visible and runnable right in our [*robot.yaml*](./robot.yaml) configuration. So add this under `tasks:`:
-
-```yaml
-Reporter:
-    shell: python -m robocorp.tasks run tasks.py -t reporter
-```
-
-Now you're good to go, just run the **consumer** again (so you'll have output items created), then run the newly introduced 3rd step called **reporter**.
-
-
-----
+---
 
 🚀 Now, go get'em
 
 Start writing Python and remember that the AI/LLM's out there are getting really good and creating Python code specifically.
 
-👉 Try out [Robocorp ReMark 💬](https://chat.robocorp.com)
-
 For more information, do not forget to check out the following:
+
 - [Robocorp Documentation -site](https://robocorp.com/docs)
 - [Portal for more examples](https://robocorp.com/portal)
+- [Robocorp API](https://robocorp.com/api)
 - Follow our main [robocorp -repository](https://github.com/robocorp/robocorp) as it is the main location where we developed the libraries and the framework.
