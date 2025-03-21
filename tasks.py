@@ -15,6 +15,7 @@ def producer():
     excel = Excel()
     input_item = workitems.inputs.current
     files = input_item.get_files("*.xlsx", output)
+    outputs_created = False
     for file in files:
         excel.open_workbook(file)
         rows = excel.read_worksheet_as_table(header=True)
@@ -26,8 +27,15 @@ def producer():
                 "Product": row["Item"],
             }
             workitems.outputs.create(payload)
-    # Create a Reporter work item to guarantee that Reporter step is triggered even if all Consumer work items fail.
-    workitems.outputs.create({"TYPE": "Reporter"})
+            outputs_created = True
+    if outputs_created:
+        # Create a Reporter work item to guarantee that Reporter step is triggered even if all Consumer work items fail.
+        workitems.outputs.create({"TYPE": "Reporter"})
+    else:
+        # If no outputs were created, mark the input item as failed
+        input_item.fail(
+            "APPLICATION", code="NO_OUTPUTS", message="No outputs were created"
+        )
 
 
 @task
