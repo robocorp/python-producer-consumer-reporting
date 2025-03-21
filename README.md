@@ -23,6 +23,12 @@ The robot is split into three tasks, meant to run as separate steps in Control R
   - Product information
 - One extra work item is created which will guarantee that Reporter step is triggered even if all Consumer work items fail.
 
+The payload of "Reporter" work item, which identifies this work item as extra work item for Consumer and Reporter.
+
+```json
+{ "TYPE": "Reporter" }
+```
+
 ### The second task (the consumer)
 
 > We recommended checking out the article "[Work item exception handling](https://robocorp.com/docs-robot-framework/development-guide/control-room/work-items#work-item-exception-handling)" before diving in.
