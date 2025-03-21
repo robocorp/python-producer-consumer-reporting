@@ -21,6 +21,7 @@ The robot is split into three tasks, meant to run as separate steps in Control R
   - Name
   - Zip code
   - Product information
+- One extra work item is created which will guarantee that Reporter step is triggered even if all Consumer work items fail.
 
 ### The second task (the consumer)
 
