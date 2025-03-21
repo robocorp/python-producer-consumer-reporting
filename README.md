@@ -65,6 +65,7 @@ There are two example input Excel files in [./devdata/work-items-in/test-input-f
 
 1. [orders.xlsx](./devdata/work-items-in/test-input-for-producer/orders.xlsx) containing 9 valid orders
 2. [orders_fails.xlsx](./devdata/work-items-in/test-input-for-producer/orders_fails.xlsx) containing 7 valid orders and 2 faulty orders
+3. [orders_all_fail.xlsx](./devdata/work-items-in/test-input-for-producer/orders_all_fail.xlsx) containing 2 faulty orders
 
 ## Extending the template
 
