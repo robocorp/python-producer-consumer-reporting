@@ -27,6 +27,7 @@ The robot is split into three tasks, meant to run as separate steps in Control R
 
 > We recommended checking out the article "[Work item exception handling](https://robocorp.com/docs-robot-framework/development-guide/control-room/work-items#work-item-exception-handling)" before diving in.
 
+- Pass "reporter" work item to Reporter step to guarantee that reporting will be done even if all consumer work items fail
 - Loop through all work items in the queue and access the payloads from the previous step
 - Validate the ZIP code (must be between 1000-9999)
 - Process each order with the provided information
