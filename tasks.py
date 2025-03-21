@@ -52,7 +52,6 @@ def consumer():
             product = item.payload["Product"]
             print(f"Processing order: {name}, {zipcode}, {product}")
             assert 1000 <= zipcode <= 9999, "Invalid ZIP code"
-            workitems.outputs.create()
             item.done()
         except AssertionError as err:
             item.fail("BUSINESS", code="INVALID_ORDER", message=str(err))
