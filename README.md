@@ -61,7 +61,7 @@ all consumer step executions have completed and resulted in either done or fail.
 
 For best experience to test the work items in this example we recommend using [Sema4.ai SDK extension for VS Code](https://robocorp.com/docs/visual-studio-code/extension-features). With the Sema4 extension you can simply run and [select the input work items](https://robocorp.com/docs/visual-studio-code/extension-features#using-work-items) to use, create inputs to simulate error cases, and so on.
 
-There are two example input Excel files in [./devdata/work-items-in/test-input-for-producer](./devdata/work-items-in/test-input-for-producer) folder
+There are three example input Excel files in [./devdata/work-items-in/test-input-for-producer](./devdata/work-items-in/test-input-for-producer) folder
 
 1. [orders.xlsx](./devdata/work-items-in/test-input-for-producer/orders.xlsx) containing 9 valid orders
 2. [orders_fails.xlsx](./devdata/work-items-in/test-input-for-producer/orders_fails.xlsx) containing 7 valid orders and 2 faulty orders
