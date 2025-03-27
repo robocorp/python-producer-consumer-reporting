@@ -64,8 +64,20 @@ For best experience to test the work items in this example we recommend using [S
 There are three example input Excel files in [./devdata/work-items-in/test-input-for-producer](./devdata/work-items-in/test-input-for-producer) folder
 
 1. [orders.xlsx](./devdata/work-items-in/test-input-for-producer/orders.xlsx) containing 9 valid orders
-2. [orders_fails.xlsx](./devdata/work-items-in/test-input-for-producer/orders_fails.xlsx) containing 7 valid orders and 2 faulty orders
-3. [orders_all_fail.xlsx](./devdata/work-items-in/test-input-for-producer/orders_all_fail.xlsx) containing 2 faulty orders
+2. [orders_fails.xlsx](./devdata/work-items-in/test-input-for-producer-some-fail/orders_fails.xlsx) containing 7 valid orders and 2 faulty orders
+3. [orders_all_fail.xlsx](./devdata/work-items-in/test-input-for-producer-all-fail/orders_all_fail.xlsx) containing 2 faulty orders
+
+### For `reporter` task to work locally following need be considered
+
+The `consumer` task is modifying its input work item payloads with field `ProcessingStatus` which contains following values:
+
+    - DONE
+    - FAIL - INVALID_ORDER
+    - FAIL - MISSING_FIELD
+
+Locally the `reporter` is looking for `work-items.json` filepath, which will contain `consumer` work items fulfilled with the above mentioned `ProcessingStatus` values.
+
+This filepath is detected by the `reporter` via environment variables, firstly by `RC_WORKITEM_INPUT_PATH` and if that is not set then by `COMPLETED_CONSUMER_WORKITEMS_JSON`, which has example value set in the [env.json](./devdata/env.json).
 
 ## Extending the template
 
