@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -52,10 +53,16 @@ def consumer():
             product = item.payload["Product"]
             print(f"Processing order: {name}, {zipcode}, {product}")
             assert 1000 <= zipcode <= 9999, "Invalid ZIP code"
+            item.payload["ProcessingStatus"] = "DONE"
+            item.save()
             item.done()
         except AssertionError as err:
+            item.payload["ProcessingStatus"] = "FAIL - INVALID_ORDER"
+            item.save()
             item.fail("BUSINESS", code="INVALID_ORDER", message=str(err))
         except KeyError as err:
+            item.payload["ProcessingStatus"] = "FAIL - MISSING_FIELD"
+            item.save()
             item.fail("APPLICATION", code="MISSING_FIELD", message=str(err))
 
 
@@ -72,7 +79,17 @@ def reporter():
 
 def _filter_consumer_work_items() -> list:
     """Filter the consumer work items from the current process run's all work items"""
+    # Check if we're running in cloud environment
+    is_cloud = os.getenv("RC_PROCESS_RUN_ID") is not None
 
+    if is_cloud:
+        return _get_cloud_consumer_work_items()
+    else:
+        return _get_local_consumer_work_items()
+
+
+def _get_cloud_consumer_work_items() -> list:
+    """Get consumer work items from cloud environment using Process API"""
     # Get the credentials to access the Robocorp Process API
     secrets = vault.get_secret("robocorp_process_api")
     # The RPA.Process library is used to interact with the Robocorp Process API
@@ -104,6 +121,28 @@ def _filter_consumer_work_items() -> list:
     return consumer_work_items
 
 
+def _get_local_consumer_work_items() -> list:
+    """Get consumer work items from local environment using file adapter"""
+
+    # Get the input path from environment or use default
+    input_path = os.getenv(
+        "RC_WORKITEM_INPUT_PATH",
+        os.getenv("COMPLETED_CONSUMER_WORKITEMS_JSON"),
+    )
+
+    # Read the work items from the input file
+    with open(input_path, "r") as f:
+        work_items = json.load(f)
+
+    # Filter out the Reporter work item
+    consumer_work_items = []
+    for item in work_items:
+        if "TYPE" not in item["payload"] or item["payload"]["TYPE"] != "Reporter":
+            consumer_work_items.append(item)
+
+    return consumer_work_items
+
+
 def _get_step_run_ids_by_step_name(step_name: str):
     """Get the step run ids for the given step name"""
     secrets = vault.get_secret("robocorp_process_api")
@@ -122,13 +161,13 @@ def _get_step_run_ids_by_step_name(step_name: str):
 
 
 def _output_report(work_items: list):
+    """Output a report of the work items processing results"""
     print("\n\nRUN REPORT\n")
     for cwi in work_items:
-        state = "PASS" if cwi["state"] == "COMPLETED" else "FAIL"
         payload = cwi["payload"]
-        exception = cwi["exception"] if "exception" in cwi else None
+        exception = cwi.get("exception") if "exception" in cwi else None
         print(
-            f"{state} - Order: '{payload['Name']}' {payload['Zip']} '{payload['Product']}'"
+            f"{payload['ProcessingStatus']} - Order: '{payload['Name']}' {payload['Zip']} '{payload['Product']}'"
         )
         if exception:
             print(f"\tException: {exception['code']}")
